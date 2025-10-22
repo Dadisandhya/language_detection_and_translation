@@ -61,9 +61,9 @@
 
 # if __name__ == "__main__":
 #     app.run(debug=True)
-
 from flask import Flask, render_template, request
 from deep_translator import GoogleTranslator
+from langdetect import detect
 from languages import LANGUAGES
 
 app = Flask(__name__)
@@ -77,20 +77,19 @@ def trans():
     text = request.form['text']
     target_lang = request.form['target_lang']
 
-    # Translation
-    try:
-        translator = GoogleTranslator(source='auto', target=target_lang)
-        translated_text = translator.translate(text)
-        detected_code = translator.detect(text)
-    except Exception as e:
-        translated_text = f"Translation Error: {str(e)}"
-        detected_code = "unknown"
+    # Detect language using langdetect
+    detected_code = detect(text)
+    detected_name = LANGUAGES.get(detected_code, detected_code).title()
 
-    detected_name = LANGUAGES.get(detected_code, detected_code)
+    # Translate using GoogleTranslator
+    try:
+        translated = GoogleTranslator(source='auto', target=target_lang).translate(text)
+    except Exception as e:
+        translated = f"Error: {e}"
 
     return render_template('index.html',
                            original_text=text,
-                           translation=translated_text,
+                           translation=translated,
                            detected_lang=detected_name,
                            selected_lang=target_lang,
                            languages=LANGUAGES)
@@ -98,14 +97,8 @@ def trans():
 @app.route('/detect', methods=['POST'])
 def detect_language():
     text = request.form['text']
-
-    try:
-        translator = GoogleTranslator(source='auto', target='en')
-        detected_code = translator.detect(text)
-    except Exception as e:
-        detected_code = "unknown"
-
-    detected_name = LANGUAGES.get(detected_code, detected_code)
+    detected_code = detect(text)
+    detected_name = LANGUAGES.get(detected_code, detected_code).title()
 
     return render_template('index.html',
                            original_text=text,
@@ -114,4 +107,3 @@ def detect_language():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5500)
-
