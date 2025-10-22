@@ -61,13 +61,12 @@
 
 # if __name__ == "__main__":
 #     app.run(debug=True)
-
 from flask import Flask, render_template, request
 from deep_translator import GoogleTranslator
 from langdetect import detect, DetectorFactory
 from languages import LANGUAGES
 
-DetectorFactory.seed = 0  # consistent language detection
+DetectorFactory.seed = 0  # Ensure consistent detection
 
 app = Flask(__name__)
 
@@ -80,12 +79,22 @@ def trans():
     text = request.form['text']
     target_lang = request.form['target_lang']
 
-    # Translate text
-    translated_text = GoogleTranslator(source='auto', target=target_lang).translate(text)
+    # Translation
+    try:
+        translated_text = GoogleTranslator(source='auto', target=target_lang).translate(text)
+    except Exception as e:
+        translated_text = f"Translation Error: {str(e)}"
 
-    # Detect language
-    detected_code = detect(text)
-    detected_name = LANGUAGES.get(detected_code, detected_code)
+    # Language Detection
+    try:
+        detected_code = detect(text)
+        if detected_code.lower() in ["zh", "zh-cn"]:
+            detected_code = "zh-cn"
+        elif detected_code.lower() == "zh-tw":
+            detected_code = "zh-tw"
+        detected_name = LANGUAGES.get(detected_code, detected_code)
+    except Exception as e:
+        detected_name = f"Detection Error: {str(e)}"
 
     return render_template('index.html',
                            original_text=text,
@@ -98,8 +107,15 @@ def trans():
 def detect_language():
     text = request.form['text']
 
-    detected_code = detect(text)
-    detected_name = LANGUAGES.get(detected_code, detected_code)
+    try:
+        detected_code = detect(text)
+        if detected_code.lower() in ["zh", "zh-cn"]:
+            detected_code = "zh-cn"
+        elif detected_code.lower() == "zh-tw":
+            detected_code = "zh-tw"
+        detected_name = LANGUAGES.get(detected_code, detected_code)
+    except Exception as e:
+        detected_name = f"Detection Error: {str(e)}"
 
     return render_template('index.html',
                            original_text=text,
