@@ -61,6 +61,7 @@
 
 # if __name__ == "__main__":
 #     app.run(debug=True)
+
 from flask import Flask, render_template, request
 from deep_translator import GoogleTranslator
 from languages import LANGUAGES
@@ -113,3 +114,4 @@ def detect_language():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5500)
+
