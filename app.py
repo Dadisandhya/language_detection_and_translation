@@ -63,10 +63,7 @@
 #     app.run(debug=True)
 from flask import Flask, render_template, request
 from deep_translator import GoogleTranslator
-from langdetect import detect, DetectorFactory
 from languages import LANGUAGES
-
-DetectorFactory.seed = 0  # Ensure consistent detection
 
 app = Flask(__name__)
 
@@ -81,20 +78,14 @@ def trans():
 
     # Translation
     try:
-        translated_text = GoogleTranslator(source='auto', target=target_lang).translate(text)
+        translator = GoogleTranslator(source='auto', target=target_lang)
+        translated_text = translator.translate(text)
+        detected_code = translator.detect(text)
     except Exception as e:
         translated_text = f"Translation Error: {str(e)}"
+        detected_code = "unknown"
 
-    # Language Detection
-    try:
-        detected_code = detect(text)
-        if detected_code.lower() in ["zh", "zh-cn"]:
-            detected_code = "zh-cn"
-        elif detected_code.lower() == "zh-tw":
-            detected_code = "zh-tw"
-        detected_name = LANGUAGES.get(detected_code, detected_code)
-    except Exception as e:
-        detected_name = f"Detection Error: {str(e)}"
+    detected_name = LANGUAGES.get(detected_code, detected_code)
 
     return render_template('index.html',
                            original_text=text,
@@ -108,14 +99,12 @@ def detect_language():
     text = request.form['text']
 
     try:
-        detected_code = detect(text)
-        if detected_code.lower() in ["zh", "zh-cn"]:
-            detected_code = "zh-cn"
-        elif detected_code.lower() == "zh-tw":
-            detected_code = "zh-tw"
-        detected_name = LANGUAGES.get(detected_code, detected_code)
+        translator = GoogleTranslator(source='auto', target='en')
+        detected_code = translator.detect(text)
     except Exception as e:
-        detected_name = f"Detection Error: {str(e)}"
+        detected_code = "unknown"
+
+    detected_name = LANGUAGES.get(detected_code, detected_code)
 
     return render_template('index.html',
                            original_text=text,
